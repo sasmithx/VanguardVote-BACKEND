@@ -85,12 +85,50 @@ exports.loginUser = async (req, res) => {
 
     try {
         const user = await User.findOne({email});
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(400).json({message: "Invalid credentials"});
+        }
 
+        res
+            .status(200)
+            .json({
+                id: user._id,
+                user: {
+                    ...user.toObject(),
+                    totalPollsCreated: 0,
+                    totalPollsVotes: 0,
+                    totalPollsBookmarked: 0,
+                },
+                token: generateToken(user._id),
+            });
     } catch (err) {
-
+        res
+            .status(500)
+            .json({message: "Error registering user", error: error.message});
     }
 }
 
 //Get User Info
 exports.getUserInfo = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({message: "User not found"});
+        }
+
+        //Add the new attributes to the response
+        const userInfo = {
+            ...user.toObject(),
+            totalPollsCreated: 0,
+            totalPollsVotes: 0,
+            totalPollsBookmarked: 0,
+        };
+
+        res.status(200).json(userInfo);
+    } catch (err) {
+        res
+            .status(500)
+            .json({message: "Error registering user", error: error.message});
+    }
 }
