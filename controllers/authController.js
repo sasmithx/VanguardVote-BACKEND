@@ -132,3 +132,4 @@ exports.getUserInfo = async (req, res) => {
             .json({message: "Error registering user", error: error.message});
     }
 }
+
