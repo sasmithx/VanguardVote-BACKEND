@@ -73,3 +73,24 @@ exports.registerUser = async (req, res) => {
             .json({message: "Error registering user", error: error.message});
     }
 }
+
+//Login User
+exports.loginUser = async (req, res) => {
+    const {email, password} = req.body;
+
+    //Validation: Check for missing fields
+    if (!email || !password) {
+        return res.status(400).json({error: "Please fill in all fields"});
+    }
+
+    try {
+        const user = await User.findOne({email});
+
+    } catch (err) {
+
+    }
+}
+
+//Get User Info
+exports.getUserInfo = async (req, res) => {
+}
