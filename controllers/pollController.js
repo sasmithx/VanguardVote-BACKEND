@@ -145,7 +145,31 @@ exports.getAllPolls = async (req, res) => {
         ]);
 
         //Ensure all types are included in stats, even those with zero counts
+        const allTypes = [
+            { type: "single-choice", label: "Single Choice" },
+            { type: "yes/no", label: "YES/NO" },
+            { type: "rating", label: "Rating" },
+            { type: "image-based", label: "Image Based" },
+            { type: "open-ended", label: "Open Ended" },
+        ];
+        const statsWithDefaults = allTypes
+            .map((pollType) => {
+                const stat = stats.find((item) => item.type === pollType.type);
+                return {
+                    label: pollType.label,
+                    type: pollType.type,
+                    count: stat ? stat.count : 0,
+                };
+            })
+            .sort((a, b) => b.count - a.count);
 
+        res.status(200).json({
+            polls: updatedPolls,
+            currentPage: pageNumber,
+            totalPages: Math.ceil(totalPolls / pageSize),
+            totalPolls,
+            stats: statsWithDefaults,
+        });
     } catch (err) {
         res
             .status(500)
