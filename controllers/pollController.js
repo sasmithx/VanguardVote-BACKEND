@@ -227,19 +227,19 @@ exports.getVotedPolls = async (req, res) => {
 
 // Get Poll by ID
 exports.getPollById = async (req, res) => {
-    const { id } = req.params;
+    const {id} = req.params;
 
     try {
         const poll = await Poll.findById(id).populate("creator", "username email");
         if (!poll) {
-            return res.status(404).json({ message: "Poll not found." });
+            return res.status(404).json({message: "Poll not found."});
         }
 
         res.status(200).json(poll);
     } catch (err) {
         res
             .status(500)
-            .json({message: 'Internal server error'});
+            .json({message: 'Internal server error', err: err.message});
     }
 }
 
@@ -285,8 +285,25 @@ exports.voteOnPoll = async (req, res) => {
 
 // Close Poll
 exports.closePoll = async (req, res) => {
+    const {id} = req.params;
+    const userId = req.user.id;
     try {
+        const poll = await Poll.findById(id);
 
+        if (!poll) {
+            return res.status(404).json({message: "Poll not found."});
+        }
+
+        if (poll.creator.toString() !== userId) {
+            return res
+                .status(403)
+                .json({message: "You are not authorized to close this poll."});
+        }
+
+        poll.closed = true;
+        await poll.save();
+
+        res.status(200).json({message: "Poll closed successfully.", poll});
     } catch (err) {
         res
             .status(500)
@@ -296,7 +313,37 @@ exports.closePoll = async (req, res) => {
 
 // Bookmark Poll
 exports.bookmarkPoll = async (req, res) => {
+    const {id} = req.params; // Poll ID
+    const userId = req.user.id;
+
     try {
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({message: "User not found."});
+        }
+        // Check if poll is already bookmarked
+        const isBookmarked = user.bookmarkedPolls.includes(id);
+
+        if (isBookmarked) {
+            // Remove poll from bookmarks
+            user.bookmarkedPolls = user.bookmarkedPolls.filter(
+                (pollId) => pollId.toString() !== id
+            );
+
+            await user.save();
+            return res.status(200).json({
+                message: "Poll removed from bookmarks.",
+                bookmarkedPolls: user.bookmarkedPolls,
+            });
+        }
+
+        //Add poll to bookmarks
+        user.bookmarkedPolls.push(id);
+        await user.save();
+        res.status(200).json({
+            message: "Poll bookmarked successfully.",
+            bookmarkedPolls: user.bookmarkedPolls,
+        });
 
     } catch (err) {
         res
@@ -307,8 +354,34 @@ exports.bookmarkPoll = async (req, res) => {
 
 // Get All Bookmarked Polls
 exports.getBookmarkedPolls = async (req, res) => {
-    try {
+    const userId = req.user.id;
 
+    try {
+        const user = await User.findById(userId).populate({
+            path: "bookmarkedPolls",
+            populate: {
+                path: "creator",
+                select: "fullName username profileImageUrl",
+            },
+        });
+
+      if (!user) {
+        return res.status(404).json({ message: "User not found." });
+      }
+
+      const bookmarkedPolls = user.bookmarkedPolls;
+      // Add `userHasVoted` flag to each poll
+      const updatedPolls = bookmarkedPolls.map((poll) => {
+          const userHasVoted = poll.voters.some((voterId) =>
+              voterId.equals(userId)
+          );
+          return {
+              ...poll.toObject(),
+              userHasVoted,
+          };
+      });
+
+      res.status(200).json({ bookmarkedPolls: updatedPolls });
     } catch (err) {
         res
             .status(500)
@@ -318,8 +391,25 @@ exports.getBookmarkedPolls = async (req, res) => {
 
 // Delete Poll
 exports.deletePoll = async (req, res) => {
-    try {
+    const { id } = req.params;
+    const userId = req.user.id;
 
+    try {
+        const poll = await Poll.findById(id);
+
+        if (!poll) {
+            return res.status(404).json({ message: "Poll not found."});
+        }
+
+        if (poll.creator.toString() !== userId) {
+            return res
+                .status(403)
+                .json({ message: "You are not authorized to delete this poll."});
+        }
+
+        await Poll.findByIdAndDelete(id);
+
+        res.status(200).json({ message: "Poll deleted successfully."});
     } catch (err) {
         res
             .status(500)
