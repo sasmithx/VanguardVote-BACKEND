@@ -146,11 +146,11 @@ exports.getAllPolls = async (req, res) => {
 
         //Ensure all types are included in stats, even those with zero counts
         const allTypes = [
-            { type: "single-choice", label: "Single Choice" },
-            { type: "yes/no", label: "YES/NO" },
-            { type: "rating", label: "Rating" },
-            { type: "image-based", label: "Image Based" },
-            { type: "open-ended", label: "Open Ended" },
+            {type: "single-choice", label: "Single Choice"},
+            {type: "yes/no", label: "YES/NO"},
+            {type: "rating", label: "Rating"},
+            {type: "image-based", label: "Image Based"},
+            {type: "open-ended", label: "Open Ended"},
         ];
         const statsWithDefaults = allTypes
             .map((pollType) => {
@@ -179,12 +179,49 @@ exports.getAllPolls = async (req, res) => {
 
 // Get All Voted Polls
 exports.getVotedPolls = async (req, res) => {
-    try {
+    const {page = 1, limit = 10} = req.query;
+    const userId = req.user._id;
 
+    try {
+        // Calculate pagination parameters
+        const pageNumber = parseInt(page, 10);
+        const pageSize = parseInt(limit, 10);
+        const skip = (pageNumber - 1) * pageSize;
+
+        // Fetch polls where the user has voted
+        const polls = await Poll.find({voters: userId}) // Filter by polls where the user's ID exists in the voters array
+            .populate("creator", "fullName profileImageUrl username email")
+            .populate({
+                path: "responses.voterId",
+                select: "username profileImageUrl fullName",
+            })
+            .skip(skip)
+            .limit(pageSize);
+
+        //Add `userHasVoted` flag for each poll
+        const updatedPolls = polls.map((poll) => {
+            const userHasVoted = poll.voters.some((voterId) =>
+                voterId.equals(userId)
+            );
+            return {
+                ...poll.toObject(),
+                userHasVoted,
+            };
+        });
+
+        // Get total count of voted polls for pagination metadata
+        const totalVotedPolls = await Poll.countDocuments({voters: userId});
+
+        res.status(200).json({
+            polls: updatedPolls,
+            currentPage: pageNumber,
+            totalPages: Math.ceil(totalVotedPolls / pageSize),
+            totalVotedPolls,
+        });
     } catch (err) {
         res
             .status(500)
-            .json({message: 'Internal server error'});
+            .json({message: 'Internal server error', error: err.message});
     }
 }
 
@@ -201,14 +238,43 @@ exports.getPollById = async (req, res) => {
 
 // Vote Poll
 exports.voteOnPoll = async (req, res) => {
-    try {
+    const {id} = req.params;
+    const {optionIndex, voterId, responseText} = req.body;
 
+    try {
+        const poll = await Poll.findById(id);
+        if (!poll) {
+            return res.status(404).json({message: "Poll not found."});
+        }
+
+        if (poll.closed) {
+            return res.status(400).json({message: "This poll is closed."});
+        }
+
+        if (poll.voters.includes(voterId)) {
+            return res.status(400).json({message: "You have already voted on this poll."});
+        }
+
+        if (poll.type === "open-ended") {
+            if (!responseText || responseText.trim() === "") {
+                return res.status(400).json({message: "Response text is required for open-ended polls."});
+            }
+            poll.responses.push({voterId, responseText});
+        } else {
+            if (typeof optionIndex !== "number" || optionIndex < 0 || optionIndex >= poll.options.length) {
+                return res.status(400).json({message: "Invalid option index."});
+            }
+            poll.options[optionIndex].votes += 1;
+        }
+
+        poll.voters.push(voterId);
+        await poll.save();
+
+        return res.status(200).json(poll);
     } catch (err) {
-        res
-            .status(500)
-            .json({message: 'Internal server error'});
+        return res.status(500).json({message: 'Internal server error', error: err.message});
     }
-}
+};
 
 // Close Poll
 exports.closePoll = async (req, res) => {
