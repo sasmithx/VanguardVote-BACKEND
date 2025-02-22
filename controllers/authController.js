@@ -130,7 +130,7 @@ exports.getUserInfo = async (req, res) => {
         }
 
         // Count polls created by the user
-        const totalPollsCreated = await Poll.countDocuments({createdBy: user._id});
+        const totalPollsCreated = await Poll.countDocuments({creator: user._id});
 
         //  Count polls voted by the user
         const totalPollsVotes = await Poll.countDocuments({
