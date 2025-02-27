@@ -4,7 +4,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/sasmithx/VanguardVote-BACKEND">
-    <img src="/src/main/resources/assets/VanguardVote-logo.png" alt="VanguardVote Logo" width="90" height="90">
+    <img src="https://github.com/sasmithx/VanguardVote-BACKEND/blob/main/assets/Vanguard.png" alt="VanguardVote Logo" width="90" height="90">
   </a>
 
 <h2 align="center">VanguardVote-BACKEND</h2>
