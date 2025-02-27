@@ -103,7 +103,7 @@ Follow these steps to set up the project locally and start running the backend s
 ### **🔹 Prerequisites**  
 Ensure you have the following installed:  
 
-- **Node.js** (v16 or higher)  
+- **Node.js**
 - **MongoDB** (local or cloud-based)  
 - **Postman** (for API testing)  
 
