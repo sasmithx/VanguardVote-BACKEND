@@ -83,6 +83,7 @@ Each service ensures **scalability, security, and maintainability**.
 
 This project leverages modern technologies to ensure efficiency, security, and performance.
 
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
 [![Node.js](https://img.shields.io/badge/Node.js-black?style=for-the-badge&logo=node.js&logoColor=green)](https://nodejs.org/)
 [![Express.js](https://img.shields.io/badge/Express.js-black?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-black?style=for-the-badge&logo=mongodb&logoColor=green)](https://www.mongodb.com/)
@@ -122,3 +123,10 @@ Access the frontend repository on GitHub [here](https://github.com/sasmithx/Vang
 ## License
 Distributed under the MIT License. See [License](LICENSE) for more information.
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<div align="center">
+  <img src="https://img.shields.io/badge/Git-black?style=for-the-badge&logo=git&logoColor=F05032" />
+  <img src="https://img.shields.io/badge/GitHub-black?style=for-the-badge&logo=github&logoColor=white" />
+  <img src="https://img.shields.io/badge/IntelliJ_IDEA-000000?style=for-the-badge&logo=intellij-idea&logoColor=white" />
+  
+</div> <br>
